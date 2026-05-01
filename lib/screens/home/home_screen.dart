@@ -20,7 +20,6 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   int _currentIndex = 0;
   DateTime? _lastBack;
-  final _searchCtrl = TextEditingController();
 
   static const _tabs = [
     _DashboardTab(),
@@ -37,12 +36,6 @@ class _HomeScreenState extends State<HomeScreen> {
         context.read<AppointmentProvider>().listenToAppointments(uid);
       }
     });
-  }
-
-  @override
-  void dispose() {
-    _searchCtrl.dispose();
-    super.dispose();
   }
 
   Future<bool> _onWillPop() async {
@@ -329,7 +322,7 @@ class _DashboardTab extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 16),
-                // Search bar
+                // Search bar (placeholder)
                 Container(
                   decoration: BoxDecoration(
                     color: Colors.white,
@@ -342,6 +335,7 @@ class _DashboardTab extends StatelessWidget {
                     ],
                   ),
                   child: const TextField(
+                    enabled: false,
                     decoration: InputDecoration(
                       hintText: 'Search services...',
                       prefixIcon: Icon(Icons.search, color: AppTheme.primary),

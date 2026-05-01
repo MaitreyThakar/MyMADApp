@@ -147,7 +147,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 Align(
                   alignment: Alignment.centerRight,
                   child: TextButton(
-                    onPressed: () {},
+                    onPressed: () => Navigator.pushNamed(context, AppRoutes.forgotPassword),
                     child: const Text(
                       'Forgot Password?',
                       style: TextStyle(color: AppTheme.secondary),
@@ -159,23 +159,6 @@ class _LoginScreenState extends State<LoginScreen> {
                   label: 'Login',
                   onPressed: _login,
                   isLoading: auth.isLoading,
-                ),
-                const SizedBox(height: 12),
-                OutlinedButton.icon(
-                  onPressed: () {},
-                  icon: const Icon(Icons.phone_outlined,
-                      color: AppTheme.primary),
-                  label: const Text(
-                    'Login with OTP',
-                    style: TextStyle(color: AppTheme.primary),
-                  ),
-                  style: OutlinedButton.styleFrom(
-                    minimumSize: const Size(double.infinity, 52),
-                    side: const BorderSide(color: AppTheme.primary),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                  ),
                 ),
                 const SizedBox(height: 32),
                 Row(
