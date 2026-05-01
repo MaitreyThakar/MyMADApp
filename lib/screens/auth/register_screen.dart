@@ -19,10 +19,14 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final _emailCtrl = TextEditingController();
   final _passCtrl = TextEditingController();
   final _confirmCtrl = TextEditingController();
+  final _adminCodeCtrl = TextEditingController();
   bool _obscurePass = true;
   bool _obscureConfirm = true;
   bool _isLoading = false;
-  String _userType = 'user'; // 'user' or 'provider'
+  String _userType = 'user'; // 'user', 'provider', or 'admin'
+  
+  // Secret admin code - change this to your own secret
+  static const String _adminSecretCode = 'ADMIN2024';
 
   @override
   void dispose() {
@@ -30,11 +34,29 @@ class _RegisterScreenState extends State<RegisterScreen> {
     _emailCtrl.dispose();
     _passCtrl.dispose();
     _confirmCtrl.dispose();
+    _adminCodeCtrl.dispose();
     super.dispose();
   }
 
   Future<void> _register() async {
     if (!_formKey.currentState!.validate()) return;
+    
+    // Validate admin code if registering as admin
+    if (_userType == 'admin') {
+      if (_adminCodeCtrl.text.trim() != _adminSecretCode) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Text('❌ Invalid admin code'),
+            backgroundColor: AppTheme.error,
+            behavior: SnackBarBehavior.floating,
+            margin: const EdgeInsets.all(16),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+          ),
+        );
+        return;
+      }
+    }
+    
     setState(() => _isLoading = true);
 
     try {
@@ -43,25 +65,28 @@ class _RegisterScreenState extends State<RegisterScreen> {
         password: _passCtrl.text.trim(),
       );
 
-      // Set role: 'user' or 'provider' (provider needs approval before appearing as verified)
+      // Set role: 'user', 'provider', or 'admin'
       await FirebaseFirestore.instance
           .collection('users')
           .doc(cred.user?.uid)
           .set({
         'name': _nameCtrl.text.trim(),
         'email': _emailCtrl.text.trim(),
-        'role': _userType, // 'user' or 'provider'
+        'role': _userType, // 'user', 'provider', or 'admin'
         'createdAt': DateTime.now().toIso8601String(),
       });
 
       if (!mounted) return;
+      String message;
+      if (_userType == 'admin') {
+        message = '✅ Admin account created! Please login.';
+      } else {
+        message = '✅ Account created! Please login.';
+      }
+      
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(
-            _userType == 'provider'
-                ? '✅ Account created! Next, apply to be a provider.'
-                : '✅ Account created! Please login.',
-          ),
+          content: Text(message),
           backgroundColor: const Color(0xFF2E7D32),
           behavior: SnackBarBehavior.floating,
           margin: const EdgeInsets.all(16),
@@ -179,31 +204,86 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
                       ),
                       const SizedBox(height: 8),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: RadioListTile<String>(
-                              title: const Text('Customer', style: TextStyle(fontSize: 14)),
-                              value: 'user',
-                              groupValue: _userType,
-                              onChanged: (v) => setState(() => _userType = v ?? 'user'),
-                              contentPadding: EdgeInsets.zero,
-                            ),
-                          ),
-                          Expanded(
-                            child: RadioListTile<String>(
-                              title: const Text('Provider', style: TextStyle(fontSize: 14)),
-                              value: 'provider',
-                              groupValue: _userType,
-                              onChanged: (v) => setState(() => _userType = v ?? 'user'),
-                              contentPadding: EdgeInsets.zero,
-                            ),
-                          ),
-                        ],
+                      RadioListTile<String>(
+                        title: const Text('Customer', style: TextStyle(fontSize: 14)),
+                        subtitle: const Text('Book appointments and services', style: TextStyle(fontSize: 11)),
+                        value: 'user',
+                        groupValue: _userType,
+                        onChanged: (v) => setState(() => _userType = v ?? 'user'),
+                        contentPadding: EdgeInsets.zero,
+                      ),
+                      RadioListTile<String>(
+                        title: const Text('Admin', style: TextStyle(fontSize: 14)),
+                        subtitle: const Text('Requires admin code', style: TextStyle(fontSize: 11, color: Colors.red)),
+                        value: 'admin',
+                        groupValue: _userType,
+                        onChanged: (v) => setState(() => _userType = v ?? 'user'),
+                        contentPadding: EdgeInsets.zero,
                       ),
                     ],
                   ),
                 ),
+                const SizedBox(height: 12),
+                // Info message for providers
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.blue.shade50,
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: Colors.blue.shade200),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(Icons.info_outline, size: 20, color: Colors.blue.shade700),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          'Want to be a provider? Register as Customer first, then apply through "Apply as Provider" in the menu.',
+                          style: TextStyle(fontSize: 12, color: Colors.blue.shade900),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 16),
+                // Admin code field (only visible when admin is selected)
+                if (_userType == 'admin') ...[
+                  CustomTextField(
+                    controller: _adminCodeCtrl,
+                    label: 'Admin Code',
+                    hint: 'Enter secret admin code',
+                    prefixIcon: Icons.security,
+                    obscureText: true,
+                    validator: (v) {
+                      if (v == null || v.isEmpty) {
+                        return 'Admin code is required';
+                      }
+                      return null;
+                    },
+                  ),
+                  const SizedBox(height: 8),
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: Colors.amber.shade50,
+                      borderRadius: BorderRadius.circular(6),
+                      border: Border.all(color: Colors.amber.shade200),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(Icons.info_outline, size: 16, color: Colors.amber.shade700),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            'Admin code is required to create admin accounts. Contact your system administrator.',
+                            style: TextStyle(fontSize: 11, color: Colors.amber.shade900),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                ],
                 const SizedBox(height: 16),
                 CustomTextField(
                   controller: _passCtrl,

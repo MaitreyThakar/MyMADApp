@@ -1,8 +1,8 @@
 class AppointmentModel {
   final String appointmentId;
   final String userId;
-  final String serviceName;
   final String providerName;
+  final String? providerId; // Provider's Firestore ID
   final String date; // Format: yyyy-MM-dd
   final String timeSlot; // Format: 10:00 AM
   final String? slotId; // Firestore slot document id (optional)
@@ -13,8 +13,8 @@ class AppointmentModel {
   AppointmentModel({
     required this.appointmentId,
     required this.userId,
-    required this.serviceName,
     required this.providerName,
+    this.providerId,
     required this.date,
     required this.timeSlot,
     this.slotId,
@@ -27,8 +27,8 @@ class AppointmentModel {
     return AppointmentModel(
       appointmentId: id,
       userId: map['userId'] ?? '',
-      serviceName: map['serviceName'] ?? '',
       providerName: map['providerName'] ?? '',
+      providerId: map['providerId'],
       date: map['date'] ?? '',
       timeSlot: map['timeSlot'] ?? '',
       slotId: map['slotId'],
@@ -40,11 +40,11 @@ class AppointmentModel {
 
   Map<String, dynamic> toMap() => {
         'userId': userId,
-        'serviceName': serviceName,
         'providerName': providerName,
+        if (providerId != null) 'providerId': providerId,
         'date': date,
         'timeSlot': timeSlot,
-      'slotId': slotId,
+        if (slotId != null) 'slotId': slotId,
         'status': status,
         'notes': notes,
         'createdAt': createdAt,

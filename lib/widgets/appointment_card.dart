@@ -26,18 +26,7 @@ class AppointmentCard extends StatelessWidget {
   }
 
   IconData _serviceIcon() {
-    switch (appointment.serviceName) {
-      case 'Clinic':
-        return Icons.local_hospital_rounded;
-      case 'Salon':
-        return Icons.content_cut_rounded;
-      case 'Tutor':
-        return Icons.school_rounded;
-      case 'Repair':
-        return Icons.build_rounded;
-      default:
-        return Icons.calendar_today_rounded;
-    }
+    return Icons.calendar_today_rounded;
   }
 
   @override
@@ -66,7 +55,7 @@ class AppointmentCard extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        appointment.serviceName,
+                        appointment.providerName,
                         style: const TextStyle(
                           fontWeight: FontWeight.bold,
                           fontSize: 15,
@@ -74,7 +63,7 @@ class AppointmentCard extends StatelessWidget {
                         ),
                       ),
                       Text(
-                        appointment.providerName,
+                        '${appointment.date} at ${appointment.timeSlot}',
                         style: const TextStyle(
                           fontSize: 13,
                           color: Color(0xFF6B7280),

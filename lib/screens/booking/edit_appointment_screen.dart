@@ -100,11 +100,6 @@ class _EditAppointmentScreenState extends State<EditAppointmentScreen> {
                 child: Column(
                   children: [
                     _InfoRow(
-                      icon: Icons.medical_services_outlined,
-                      label: 'Service',
-                      value: widget.appointment.serviceName,
-                    ),
-                    _InfoRow(
                       icon: Icons.person_outline,
                       label: 'Provider',
                       value: widget.appointment.providerName,

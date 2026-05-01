@@ -5,6 +5,7 @@ import '../../models/provider_application_model.dart';
 import '../../models/provider_model.dart';
 import '../../services/application_service.dart';
 import '../../services/provider_service.dart';
+import '../../services/notification_service.dart';
 import '../../widgets/custom_button.dart';
 
 class AdminApplicationsScreen extends StatefulWidget {
@@ -50,10 +51,17 @@ class _AdminApplicationsScreenState extends State<AdminApplicationsScreen> {
       // Update application with approval
       await _appService.approveApplication(app.applicationId, providerRef.id, adminNotes);
 
-      // Update user role to provider (optional - they can remain dual role)
+      // Update user role to provider
       await FirebaseFirestore.instance.collection('users').doc(app.applicantUserId).update({
-        'role': 'provider', // Upgrade to provider role
+        'role': 'provider',
       });
+
+      // Send notification to user
+      try {
+        await NotificationService.showProviderApplicationApproved(app.applicantName);
+      } catch (e) {
+        // Notification failed but approval succeeded
+      }
 
       if (!mounted) return;
       Navigator.pop(context); // Close loading dialog
@@ -86,6 +94,13 @@ class _AdminApplicationsScreenState extends State<AdminApplicationsScreen> {
 
     try {
       await _appService.rejectApplication(app.applicationId, reason);
+
+      // Send notification to user
+      try {
+        await NotificationService.showProviderApplicationRejected(app.applicantName, reason);
+      } catch (e) {
+        // Notification failed but rejection succeeded
+      }
 
       if (!mounted) return;
       Navigator.pop(context);

@@ -25,7 +25,7 @@ class AppointmentsListScreen extends StatelessWidget {
           ],
         ),
         content: Text(
-          'Are you sure you want to delete the appointment for ${appt.serviceName} on ${appt.date}?',
+          'Are you sure you want to delete the appointment with ${appt.providerName} on ${appt.date}?',
         ),
         actions: [
           TextButton(

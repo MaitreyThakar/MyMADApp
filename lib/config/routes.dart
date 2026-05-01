@@ -13,6 +13,10 @@ import '../screens/dev/debug_seeder_screen.dart';
 import '../screens/providers/providers_list_screen.dart';
 import '../screens/providers/provider_edit_screen.dart';
 import '../screens/providers/provider_application_screen.dart';
+import '../screens/providers/my_application_status_screen.dart';
+import '../screens/providers/provider_dashboard_screen.dart';
+import '../screens/providers/provider_slots_management_screen.dart';
+import '../screens/providers/provider_bookings_screen.dart';
 import '../screens/admin/admin_applications_screen.dart';
 
 class AppRoutes {
@@ -28,6 +32,10 @@ class AppRoutes {
   static const String confirm = '/booking/confirm';
   static const String analytics = '/analytics';
   static const String providerApply = '/provider/apply';
+  static const String myApplicationStatus = '/provider/my-application-status';
+  static const String providerDashboard = '/provider/dashboard';
+  static const String providerSlotsManagement = '/provider/slots-management';
+  static const String providerBookings = '/provider/bookings';
   static const String adminApplications = '/admin/applications';
 
   static Map<String, WidgetBuilder> get routes => {
@@ -45,6 +53,10 @@ class AppRoutes {
         '/providers': (_) => const ProvidersListScreen(),
         '/providers/edit': (_) => const ProviderEditScreen(),
         providerApply: (_) => const ProviderApplicationScreen(),
+        myApplicationStatus: (_) => const MyApplicationStatusScreen(),
+        providerDashboard: (_) => const ProviderDashboardScreen(),
+        providerSlotsManagement: (_) => const ProviderSlotsManagementScreen(),
+        providerBookings: (_) => const ProviderBookingsScreen(),
         adminApplications: (_) => const AdminApplicationsScreen(),
       };
 }

@@ -163,6 +163,15 @@ class _HomeScreenState extends State<HomeScreen> {
             },
           ),
           ListTile(
+            leading: const Icon(Icons.business_center_outlined,
+                color: AppTheme.primary),
+            title: const Text('Browse Providers'),
+            onTap: () {
+              Navigator.pop(context);
+              Navigator.pushNamed(context, '/providers');
+            },
+          ),
+          ListTile(
             leading:
                 const Icon(Icons.bar_chart_rounded, color: AppTheme.primary),
             title: const Text('Analytics'),
@@ -171,7 +180,6 @@ class _HomeScreenState extends State<HomeScreen> {
               Navigator.pushNamed(context, AppRoutes.analytics);
             },
           ),
-          // Removed demo 'API Posts' menu item
           ListTile(
             leading: const Icon(Icons.person_outline,
                 color: AppTheme.primary),
@@ -185,11 +193,37 @@ class _HomeScreenState extends State<HomeScreen> {
           if (auth.userRole == 'provider') ...[
             const Divider(),
             ListTile(
+              leading: const Icon(Icons.dashboard, color: AppTheme.primary),
+              title: const Text('Provider Dashboard'),
+              onTap: () {
+                Navigator.pop(context);
+                Navigator.pushNamed(context, AppRoutes.providerDashboard);
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.assignment_turned_in, color: AppTheme.primary),
+              title: const Text('My Application Status'),
+              onTap: () {
+                Navigator.pop(context);
+                Navigator.pushNamed(context, AppRoutes.myApplicationStatus);
+              },
+            ),
+          ] else if (auth.userRole == 'user') ...[
+            const Divider(),
+            ListTile(
               leading: const Icon(Icons.business_center, color: AppTheme.primary),
               title: const Text('Apply as Provider'),
               onTap: () {
                 Navigator.pop(context);
                 Navigator.pushNamed(context, AppRoutes.providerApply);
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.assignment_turned_in, color: AppTheme.primary),
+              title: const Text('My Application Status'),
+              onTap: () {
+                Navigator.pop(context);
+                Navigator.pushNamed(context, AppRoutes.myApplicationStatus);
               },
             ),
           ] else if (auth.userRole == 'admin') ...[
@@ -202,20 +236,13 @@ class _HomeScreenState extends State<HomeScreen> {
                 Navigator.pushNamed(context, AppRoutes.adminApplications);
               },
             ),
-            ListTile(
-              leading: const Icon(Icons.business_center, color: AppTheme.primary),
-              title: const Text('Manage Providers'),
-              onTap: () {
-                Navigator.pop(context);
-                Navigator.pushNamed(context, '/providers');
-              },
-            ),
           ],
-          if (kDebugMode) ...[
+          // Dev Tools - Only for admins in debug mode
+          if (kDebugMode && auth.userRole == 'admin') ...[
             const Divider(),
             ListTile(
-              leading: const Icon(Icons.developer_mode, color: AppTheme.primary),
-              title: const Text('Dev Tools'),
+              leading: const Icon(Icons.developer_mode, color: Colors.orange),
+              title: const Text('Dev Tools (Admin Only)'),
               onTap: () {
                 Navigator.pop(context);
                 Navigator.pushNamed(context, '/dev/seeder');

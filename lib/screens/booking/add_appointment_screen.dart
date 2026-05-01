@@ -42,9 +42,12 @@ class _AddAppointmentScreenState extends State<AddAppointmentScreen> {
         final slot = args['timeSlot'] as String?;
         final slotId = args['slotId'] as String?;
         final providerName = args['providerName'] as String?;
+        final providerId = args['providerId'] as String?;
         if (date != null) {
           _dateCtrl.text = date;
           _selectedDate = DateTime.parse(date);
+          // Load slots for pre-filled date
+          context.read<SlotsProvider>().listenToDate(date, providerId: providerId);
         }
         if (slot != null) setState(() => _selectedSlot = slot);
         if (slotId != null) setState(() => _selectedSlotId = slotId);
@@ -90,6 +93,14 @@ class _AddAppointmentScreenState extends State<AddAppointmentScreen> {
         _dateCtrl.text = DateFormat('yyyy-MM-dd').format(picked);
         _selectedSlot = null;
       });
+      
+      // Load slots for the selected date
+      final args = ModalRoute.of(context)?.settings.arguments as Map?;
+      final providerId = args?['providerId'] as String?;
+      context.read<SlotsProvider>().listenToDate(
+        DateFormat('yyyy-MM-dd').format(picked),
+        providerId: providerId,
+      );
     }
   }
 
@@ -110,11 +121,16 @@ class _AddAppointmentScreenState extends State<AddAppointmentScreen> {
     }
 
     final uid = FirebaseAuth.instance.currentUser?.uid ?? '';
+    
+    // Get providerId from arguments if available
+    final args = ModalRoute.of(context)?.settings.arguments as Map?;
+    final providerId = args?['providerId'] as String?;
+    
     final appt = AppointmentModel(
       appointmentId: '',
       userId: uid,
-      serviceName: _selectedService!,
       providerName: _providerCtrl.text.trim(),
+      providerId: providerId,
       date: _dateCtrl.text.trim(),
       timeSlot: _selectedSlot!,
       slotId: _selectedSlotId,
@@ -126,7 +142,7 @@ class _AddAppointmentScreenState extends State<AddAppointmentScreen> {
 
     // Notifications
     await NotificationService.showBookingConfirmation(
-      _selectedService!,
+      _providerCtrl.text.trim(),
       _dateCtrl.text,
       _selectedSlot!,
     );
@@ -151,7 +167,7 @@ class _AddAppointmentScreenState extends State<AddAppointmentScreen> {
 
         await NotificationService.scheduleAppointmentReminder(
           DateTime.now().millisecondsSinceEpoch ~/ 1000 % 100000,
-          _selectedService!,
+          _providerCtrl.text.trim(),
           apptDateTime,
         );
       } catch (_) {}
@@ -185,34 +201,6 @@ class _AddAppointmentScreenState extends State<AddAppointmentScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const _SectionLabel('Service Type'),
-              const SizedBox(height: 8),
-              DropdownButtonFormField<String>(
-                value: _selectedService,
-                decoration: InputDecoration(
-                  filled: true,
-                  fillColor: Colors.white,
-                  prefixIcon: const Icon(Icons.medical_services_outlined,
-                      color: AppTheme.primary),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide.none,
-                  ),
-                  enabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide:
-                        const BorderSide(color: Color(0xFFDDE3F0)),
-                  ),
-                  hintText: 'Select service type',
-                ),
-                items: AppConstants.serviceTypes
-                    .map((s) => DropdownMenuItem(value: s, child: Text(s)))
-                    .toList(),
-                onChanged: (v) => setState(() => _selectedService = v),
-                validator: (v) =>
-                    v == null ? 'Please select a service type' : null,
-              ),
-              const SizedBox(height: 16),
               const _SectionLabel('Provider Name'),
               const SizedBox(height: 8),
               CustomTextField(

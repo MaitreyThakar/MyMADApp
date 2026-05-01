@@ -66,6 +66,42 @@ class NotificationService {
     );
   }
 
+  static Future<void> showProviderApplicationApproved(String applicantName) async {
+    await _plugin.show(
+      DateTime.now().millisecondsSinceEpoch ~/ 1000 % 100000,
+      '✅ Application Approved!',
+      'Congratulations $applicantName! Your provider application has been approved.',
+      NotificationDetails(
+        android: AndroidNotificationDetails(
+          AppConstants.notifChannelId,
+          AppConstants.notifChannelName,
+          importance: Importance.high,
+          priority: Priority.high,
+          icon: '@mipmap/ic_launcher',
+        ),
+        iOS: const DarwinNotificationDetails(),
+      ),
+    );
+  }
+
+  static Future<void> showProviderApplicationRejected(String applicantName, String reason) async {
+    await _plugin.show(
+      DateTime.now().millisecondsSinceEpoch ~/ 1000 % 100000,
+      '❌ Application Not Approved',
+      'Sorry $applicantName. Reason: $reason',
+      NotificationDetails(
+        android: AndroidNotificationDetails(
+          AppConstants.notifChannelId,
+          AppConstants.notifChannelName,
+          importance: Importance.high,
+          priority: Priority.high,
+          icon: '@mipmap/ic_launcher',
+        ),
+        iOS: const DarwinNotificationDetails(),
+      ),
+    );
+  }
+
   static Future<void> scheduleAppointmentReminder(
     int id,
     String serviceName,
