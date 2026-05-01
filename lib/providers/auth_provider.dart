@@ -7,11 +7,15 @@ class AuthProvider extends ChangeNotifier {
   bool _isLoggedIn = false;
   String _userName = '';
   String _userEmail = '';
+  String _userId = '';
+  String _userRole = 'user';
   bool _isLoading = false;
 
   bool get isLoggedIn => _isLoggedIn;
   String get userName => _userName;
   String get userEmail => _userEmail;
+  String get userId => _userId;
+  String get userRole => _userRole;
   bool get isLoading => _isLoading;
 
   final _auth = FirebaseAuth.instance;
@@ -31,6 +35,8 @@ class AuthProvider extends ChangeNotifier {
             await _firestore.collection('users').doc(currentUser.uid).get();
         if (doc.exists) {
           _userName = doc.data()?['name'] ?? '';
+          _userRole = doc.data()?['role'] ?? 'user';
+          _userId = currentUser.uid;
         }
       } catch (_) {}
     } else {
@@ -54,8 +60,9 @@ class AuthProvider extends ChangeNotifier {
 
       _isLoggedIn = true;
       _userEmail = cred.user?.email ?? '';
+      _userId = cred.user?.uid ?? '';
 
-      // Fetch name
+      // Fetch name and role from users collection
       try {
         final doc = await _firestore
             .collection('users')
@@ -63,6 +70,7 @@ class AuthProvider extends ChangeNotifier {
             .get();
         if (doc.exists) {
           _userName = doc.data()?['name'] ?? '';
+          _userRole = doc.data()?['role'] ?? 'user'; // 'admin', 'provider', or 'user'
         }
       } catch (_) {}
 

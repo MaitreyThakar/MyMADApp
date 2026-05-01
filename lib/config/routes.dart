@@ -7,9 +7,13 @@ import '../screens/booking/add_appointment_screen.dart';
 import '../screens/booking/slot_booking_screen.dart';
 import '../screens/booking/booking_confirm_screen.dart';
 import '../screens/profile/profile_screen.dart';
-import '../screens/api/api_posts_screen.dart';
 import '../screens/analytics/analytics_dashboard_screen.dart';
 import '../screens/splash_screen.dart';
+import '../screens/dev/debug_seeder_screen.dart';
+import '../screens/providers/providers_list_screen.dart';
+import '../screens/providers/provider_edit_screen.dart';
+import '../screens/providers/provider_application_screen.dart';
+import '../screens/admin/admin_applications_screen.dart';
 
 class AppRoutes {
   static const String splash = '/';
@@ -22,8 +26,9 @@ class AppRoutes {
   static const String profile = '/profile';
   static const String booking = '/booking';
   static const String confirm = '/booking/confirm';
-  static const String apiPosts = '/api-posts';
   static const String analytics = '/analytics';
+  static const String providerApply = '/provider/apply';
+  static const String adminApplications = '/admin/applications';
 
   static Map<String, WidgetBuilder> get routes => {
         splash: (_) => const SplashScreen(),
@@ -35,7 +40,11 @@ class AppRoutes {
         profile: (_) => const ProfileScreen(),
         booking: (_) => const SlotBookingScreen(),
         confirm: (_) => const BookingConfirmScreen(),
-        apiPosts: (_) => const ApiPostsScreen(),
         analytics: (_) => const AnalyticsDashboardScreen(),
+        '/dev/seeder': (_) => const DebugSeederScreen(),
+        '/providers': (_) => const ProvidersListScreen(),
+        '/providers/edit': (_) => const ProviderEditScreen(),
+        providerApply: (_) => const ProviderApplicationScreen(),
+        adminApplications: (_) => const AdminApplicationsScreen(),
       };
 }

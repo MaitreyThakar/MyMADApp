@@ -5,6 +5,7 @@ class AppointmentModel {
   final String providerName;
   final String date; // Format: yyyy-MM-dd
   final String timeSlot; // Format: 10:00 AM
+  final String? slotId; // Firestore slot document id (optional)
   final String status; // pending | confirmed | cancelled
   final String notes;
   final String createdAt; // ISO 8601
@@ -16,6 +17,7 @@ class AppointmentModel {
     required this.providerName,
     required this.date,
     required this.timeSlot,
+    this.slotId,
     this.status = 'pending',
     this.notes = '',
     required this.createdAt,
@@ -29,6 +31,7 @@ class AppointmentModel {
       providerName: map['providerName'] ?? '',
       date: map['date'] ?? '',
       timeSlot: map['timeSlot'] ?? '',
+      slotId: map['slotId'],
       status: map['status'] ?? 'pending',
       notes: map['notes'] ?? '',
       createdAt: map['createdAt'] ?? '',
@@ -41,6 +44,7 @@ class AppointmentModel {
         'providerName': providerName,
         'date': date,
         'timeSlot': timeSlot,
+      'slotId': slotId,
         'status': status,
         'notes': notes,
         'createdAt': createdAt,

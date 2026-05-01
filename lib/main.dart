@@ -1,4 +1,5 @@
 import 'package:firebase_core/firebase_core.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'config/routes.dart';
@@ -6,6 +7,7 @@ import 'config/theme.dart';
 import 'firebase_options.dart';
 import 'providers/auth_provider.dart';
 import 'providers/appointment_provider.dart';
+import 'providers/slots_provider.dart';
 import 'services/notification_service.dart';
 import 'services/fcm_service.dart';
 
@@ -21,8 +23,11 @@ void main() async {
   // Share navigator key with notification service
   globalNavigatorKey = navigatorKey;
 
-  await NotificationService.init();
-  await FcmService.init();
+  // Push/local notifications are mobile-only in this app setup.
+  if (!kIsWeb) {
+    await NotificationService.init();
+    await FcmService.init();
+  }
 
   runApp(const AppointmentApp());
 }
@@ -38,6 +43,7 @@ class AppointmentApp extends StatelessWidget {
         ChangeNotifierProvider(
             create: (_) => AuthProvider()..checkSession()),
         ChangeNotifierProvider(create: (_) => AppointmentProvider()),
+        ChangeNotifierProvider(create: (_) => SlotsProvider()),
       ],
       child: MaterialApp(
         title: 'Appointment App',

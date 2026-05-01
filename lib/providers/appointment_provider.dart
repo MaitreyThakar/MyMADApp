@@ -25,7 +25,7 @@ class AppointmentProvider extends ChangeNotifier {
     _isLoading = true;
     notifyListeners();
     try {
-      await _service.createAppointment(appt);
+      await _service.createAppointment(appt, slotId: appt.slotId);
     } finally {
       _isLoading = false;
       notifyListeners();
@@ -36,6 +36,40 @@ class AppointmentProvider extends ChangeNotifier {
       String id, Map<String, dynamic> data) async {
     await _service.updateAppointment(id, data);
     notifyListeners();
+  }
+
+  Future<void> rescheduleAppointment({
+    required String appointmentId,
+    required String newDate,
+    required String newTime,
+    String? newSlotId,
+    String? oldSlotId,
+  }) async {
+    _isLoading = true;
+    notifyListeners();
+    try {
+      await _service.rescheduleAppointment(
+        appointmentId: appointmentId,
+        newDate: newDate,
+        newTime: newTime,
+        newSlotId: newSlotId,
+        oldSlotId: oldSlotId,
+      );
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  Future<void> cancelAppointment(String appointmentId, {String? slotId}) async {
+    _isLoading = true;
+    notifyListeners();
+    try {
+      await _service.cancelAppointment(appointmentId, slotId: slotId);
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
   }
 
   Future<void> deleteAppointment(String id, {int? notifId}) async {

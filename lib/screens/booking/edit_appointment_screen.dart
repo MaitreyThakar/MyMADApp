@@ -54,6 +54,21 @@ class _EditAppointmentScreenState extends State<EditAppointmentScreen> {
     }
   }
 
+  Future<void> _cancel() async {
+    setState(() => _isLoading = true);
+    await context.read<AppointmentProvider>().cancelAppointment(widget.appointment.appointmentId, slotId: widget.appointment.slotId);
+    if (mounted) {
+      setState(() => _isLoading = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text('✅ Appointment cancelled'),
+          backgroundColor: const Color(0xFF2E7D32),
+        ),
+      );
+      Navigator.pop(context);
+    }
+  }
+
   Color _statusColor(String status) {
     switch (status) {
       case 'confirmed':
@@ -203,6 +218,13 @@ class _EditAppointmentScreenState extends State<EditAppointmentScreen> {
               label: 'Update Appointment',
               onPressed: _update,
               isLoading: _isLoading,
+            ),
+            const SizedBox(height: 12),
+            CustomButton(
+              label: 'Cancel Appointment',
+              onPressed: _isLoading ? null : _cancel,
+              backgroundColor: const Color(0xFFDC3545),
+              foregroundColor: Colors.white,
             ),
           ],
         ),

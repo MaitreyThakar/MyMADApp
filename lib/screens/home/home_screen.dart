@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:firebase_auth/firebase_auth.dart' hide AuthProvider;
 import 'package:provider/provider.dart';
+import 'package:flutter/foundation.dart';
 import '../../config/routes.dart';
 import '../../config/theme.dart';
 import '../../providers/auth_provider.dart';
@@ -170,15 +171,7 @@ class _HomeScreenState extends State<HomeScreen> {
               Navigator.pushNamed(context, AppRoutes.analytics);
             },
           ),
-          ListTile(
-            leading:
-                const Icon(Icons.article_outlined, color: AppTheme.primary),
-            title: const Text('API Posts'),
-            onTap: () {
-              Navigator.pop(context);
-              Navigator.pushNamed(context, AppRoutes.apiPosts);
-            },
-          ),
+          // Removed demo 'API Posts' menu item
           ListTile(
             leading: const Icon(Icons.person_outline,
                 color: AppTheme.primary),
@@ -188,6 +181,47 @@ class _HomeScreenState extends State<HomeScreen> {
               setState(() => _currentIndex = 2);
             },
           ),
+          // Role-based menu items
+          if (auth.userRole == 'provider') ...[
+            const Divider(),
+            ListTile(
+              leading: const Icon(Icons.business_center, color: AppTheme.primary),
+              title: const Text('Apply as Provider'),
+              onTap: () {
+                Navigator.pop(context);
+                Navigator.pushNamed(context, AppRoutes.providerApply);
+              },
+            ),
+          ] else if (auth.userRole == 'admin') ...[
+            const Divider(),
+            ListTile(
+              leading: const Icon(Icons.assignment_ind, color: AppTheme.primary),
+              title: const Text('Provider Applications'),
+              onTap: () {
+                Navigator.pop(context);
+                Navigator.pushNamed(context, AppRoutes.adminApplications);
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.business_center, color: AppTheme.primary),
+              title: const Text('Manage Providers'),
+              onTap: () {
+                Navigator.pop(context);
+                Navigator.pushNamed(context, '/providers');
+              },
+            ),
+          ],
+          if (kDebugMode) ...[
+            const Divider(),
+            ListTile(
+              leading: const Icon(Icons.developer_mode, color: AppTheme.primary),
+              title: const Text('Dev Tools'),
+              onTap: () {
+                Navigator.pop(context);
+                Navigator.pushNamed(context, '/dev/seeder');
+              },
+            ),
+          ],
           const Divider(),
           ListTile(
             leading: const Icon(Icons.logout, color: Colors.red),
@@ -220,30 +254,7 @@ class _DashboardTab extends StatelessWidget {
   ];
 
   static const _services = [
-    {
-      'name': 'Dr. Anita Shah',
-      'type': 'Clinic',
-      'slots': '5 slots left',
-      'rating': '4.8',
-      'icon': Icons.local_hospital_rounded,
-      'color': Color(0xFFE3F2FD),
-    },
-    {
-      'name': 'Style Studio',
-      'type': 'Salon',
-      'slots': '3 slots left',
-      'rating': '4.6',
-      'icon': Icons.content_cut_rounded,
-      'color': Color(0xFFFCE4EC),
-    },
-    {
-      'name': 'Rahul Sir Tuition',
-      'type': 'Tutor',
-      'slots': '8 slots left',
-      'rating': '4.9',
-      'icon': Icons.school_rounded,
-      'color': Color(0xFFE8F5E9),
-    },
+    // Providers will be loaded dynamically from Firestore; placeholder empty list
   ];
 
   @override

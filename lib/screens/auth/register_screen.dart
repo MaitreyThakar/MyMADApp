@@ -22,6 +22,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   bool _obscurePass = true;
   bool _obscureConfirm = true;
   bool _isLoading = false;
+  String _userType = 'user'; // 'user' or 'provider'
 
   @override
   void dispose() {
@@ -42,19 +43,25 @@ class _RegisterScreenState extends State<RegisterScreen> {
         password: _passCtrl.text.trim(),
       );
 
+      // Set role: 'user' or 'provider' (provider needs approval before appearing as verified)
       await FirebaseFirestore.instance
           .collection('users')
           .doc(cred.user?.uid)
           .set({
         'name': _nameCtrl.text.trim(),
         'email': _emailCtrl.text.trim(),
+        'role': _userType, // 'user' or 'provider'
         'createdAt': DateTime.now().toIso8601String(),
       });
 
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: const Text('✅ Account created! Please login.'),
+          content: Text(
+            _userType == 'provider'
+                ? '✅ Account created! Next, apply to be a provider.'
+                : '✅ Account created! Please login.',
+          ),
           backgroundColor: const Color(0xFF2E7D32),
           behavior: SnackBarBehavior.floating,
           margin: const EdgeInsets.all(16),
@@ -155,6 +162,47 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     }
                     return null;
                   },
+                ),
+                const SizedBox(height: 16),
+                // User type selection
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    border: Border.all(color: Colors.grey.shade300),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'Register as:',
+                        style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
+                      ),
+                      const SizedBox(height: 8),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: RadioListTile<String>(
+                              title: const Text('Customer', style: TextStyle(fontSize: 14)),
+                              value: 'user',
+                              groupValue: _userType,
+                              onChanged: (v) => setState(() => _userType = v ?? 'user'),
+                              contentPadding: EdgeInsets.zero,
+                            ),
+                          ),
+                          Expanded(
+                            child: RadioListTile<String>(
+                              title: const Text('Provider', style: TextStyle(fontSize: 14)),
+                              value: 'provider',
+                              groupValue: _userType,
+                              onChanged: (v) => setState(() => _userType = v ?? 'user'),
+                              contentPadding: EdgeInsets.zero,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
                 ),
                 const SizedBox(height: 16),
                 CustomTextField(

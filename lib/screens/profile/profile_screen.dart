@@ -200,14 +200,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       Navigator.pushNamed(context, AppRoutes.analytics),
                 ),
                 const Divider(height: 1, indent: 16, endIndent: 16),
-                ListTile(
-                  leading: const Icon(Icons.article_outlined,
-                      color: AppTheme.secondary),
-                  title: const Text('API Posts'),
-                  trailing: const Icon(Icons.chevron_right),
-                  onTap: () =>
-                      Navigator.pushNamed(context, AppRoutes.apiPosts),
-                ),
               ],
             ),
           ),

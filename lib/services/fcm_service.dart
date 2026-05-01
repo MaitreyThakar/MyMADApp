@@ -1,4 +1,5 @@
 import 'dart:developer';
+import 'package:flutter/foundation.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'notification_service.dart';
 
@@ -10,6 +11,8 @@ Future<void> _backgroundMessageHandler(RemoteMessage message) async {
 // ignore: avoid_classes_with_only_static_members
 class FcmService {
   static Future<void> init() async {
+    if (kIsWeb) return;
+
     final messaging = FirebaseMessaging.instance;
 
     // Request permission

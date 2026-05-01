@@ -1,0 +1,922 @@
+1. PROJECT OVERVIEW
+You are building a Flutter mobile application called the Appointment App – Smart Slot Booking System. This is a full-stack, production-grade Flutter app developed progressively across 13 labs. The app allows users to register, log in, browse service providers, book appointment slots, manage their bookings, receive notifications, and view booking analytics — all powered by Firebase as the backend.
+
+Core Identity:
+
+App Name: Appointment App
+Tagline: "Book smarter, wait less."
+Platform: Flutter (Dart) — cross-platform Android & iOS
+Backend: Firebase (Authentication + Firestore)
+Primary Color: #1F4E79 (deep navy blue)
+Secondary Color: #2E75B6
+Accent Color: Used for selected state highlights
+Font: Poppins (headings), system default (body)
+Border Radius: 12px (TextFields), 14px (Cards), 20px (status badges), 10px (Snackbars)
+Package Name (Android): com.d24it166.appointmentapp
+App Version: 1.0.0+1 (versionName + versionCode)
+Min SDK (Android): API 21 (Android 5.0)
+Target SDK (Android): API 34
+2. COMPLETE FOLDER STRUCTURE
+appointment_app/
+├── android/
+│   ├── app/
+│   │   ├── build.gradle          ← Signing config + release build type
+│   │   ├── google-services.json  ← Firebase Android config (NOT in Git)
+│   │   └── src/main/
+│   │       ├── AndroidManifest.xml   ← Permissions (INTERNET, NOTIFICATIONS, ALARM, etc.)
+│   │       └── res/
+│   │           ├── mipmap-*/         ← Generated app icons (all densities)
+│   │           └── drawable/         ← Generated splash screen drawable
+│   └── key.properties            ← Signing config (NOT in Git)
+│
+├── ios/
+│   └── Runner/
+│       ├── GoogleService-Info.plist  ← Firebase iOS config
+│       └── Assets.xcassets/
+│           └── AppIcon.appiconset/   ← iOS app icons
+│
+├── assets/
+│   ├── icon/
+│   │   ├── app_icon.png          ← Source icon (1024×1024 PNG)
+│   │   └── app_icon_fg.png       ← Adaptive icon foreground (Android 8+)
+│   └── splash/
+│       └── splash_logo.png       ← Splash screen logo (512×512 PNG)
+│
+├── lib/
+│   ├── main.dart                 ← App entry point: Firebase init, MultiProvider, navigatorKey
+│   │
+│   ├── config/
+│   │   ├── theme.dart            ← AppTheme: colors, typography, input decorations
+│   │   ├── constants.dart        ← App-wide constant values
+│   │   └── routes.dart           ← AppRoutes: all named route definitions
+│   │
+│   ├── models/
+│   │   ├── appointment_model.dart  ← AppointmentModel with fromMap/toMap
+│   │   └── post_model.dart         ← Post model for REST API (JSONPlaceholder)
+│   │
+│   ├── providers/
+│   │   ├── auth_provider.dart        ← Global login/logout state (ChangeNotifier)
+│   │   └── appointment_provider.dart ← Appointments CRUD state (ChangeNotifier)
+│   │
+│   ├── screens/
+│   │   ├── auth/
+│   │   │   ├── login_screen.dart      ← Login UI + Firebase auth logic
+│   │   │   └── register_screen.dart   ← Registration UI + Firebase create user
+│   │   │
+│   │   ├── home/
+│   │   │   ├── home_screen.dart              ← Dashboard: Drawer + BottomNav + service cards
+│   │   │   └── appointments_list_screen.dart ← CRUD list: StreamBuilder + FAB
+│   │   │
+│   │   ├── booking/
+│   │   │   ├── slot_booking_screen.dart      ← Calendar + time slot chips
+│   │   │   ├── add_appointment_screen.dart   ← Create booking form
+│   │   │   ├── edit_appointment_screen.dart  ← Update status/notes
+│   │   │   └── booking_confirm_screen.dart   ← Booking confirmation screen
+│   │   │
+│   │   ├── profile/
+│   │   │   └── profile_screen.dart    ← User info + toggle switches + logout
+│   │   │
+│   │   ├── api/
+│   │   │   └── api_posts_screen.dart  ← REST API GET + ListView display
+│   │   │
+│   │   └── analytics/
+│   │       └── analytics_dashboard_screen.dart ← Bar/Line/Pie charts with TabBar
+│   │
+│   ├── services/
+│   │   ├── auth_service.dart           ← Firebase auth helper methods
+│   │   ├── appointment_service.dart    ← Firestore CRUD operations
+│   │   ├── api_service.dart            ← REST API GET request logic
+│   │   ├── notification_service.dart   ← Local + scheduled notifications
+│   │   └── fcm_service.dart            ← Firebase Cloud Messaging setup
+│   │
+│   └── widgets/
+│       ├── custom_text_field.dart  ← Reusable styled TextFormField
+│       ├── custom_button.dart      ← Reusable ElevatedButton with loading state
+│       ├── slot_card.dart          ← Time slot display card
+│       └── appointment_card.dart   ← Appointment list card with status badge
+│
+└── pubspec.yaml                   ← Dependencies + version + icon/splash config
+3. PUBSPEC.YAML — ALL DEPENDENCIES
+name: appointment_app
+description: Smart Slot Booking System – Appointment App
+publish_to: none
+version: 1.0.0+1
+
+environment:
+  sdk: '>=3.0.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  # Firebase
+  firebase_core: ^3.6.0
+  firebase_auth: ^4.17.0
+  cloud_firestore: ^4.15.0
+  firebase_messaging: ^15.1.4
+
+  # State Management
+  provider: ^6.1.2
+
+  # Session Persistence
+  shared_preferences: ^2.2.2
+
+  # Calendar Widget
+  table_calendar: ^3.0.9
+
+  # REST API
+  http: ^1.2.1
+
+  # Notifications
+  flutter_local_notifications: ^17.2.2
+  timezone: ^0.9.4
+
+  # Charts
+  fl_chart: ^0.68.0
+
+  # Date Formatting
+  intl: ^0.19.0
+
+dev_dependencies:
+  flutter_launcher_icons: ^0.13.1
+  flutter_native_splash: ^2.4.0
+  flutter_test:
+    sdk: flutter
+
+flutter_launcher_icons:
+  android: true
+  ios: true
+  image_path: 'assets/icon/app_icon.png'
+  adaptive_icon_background: '#1F4E79'
+  adaptive_icon_foreground: 'assets/icon/app_icon_fg.png'
+  min_sdk_android: 21
+
+flutter_native_splash:
+  color: '#1F4E79'
+  image: 'assets/splash/splash_logo.png'
+  android_12:
+    color: '#1F4E79'
+    image: 'assets/splash/splash_logo.png'
+  ios: true
+  web: false
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/icon/
+    - assets/splash/
+  fonts:
+    - family: Poppins
+      fonts:
+        - asset: assets/fonts/Poppins-Regular.ttf
+        - asset: assets/fonts/Poppins-Bold.ttf
+          weight: 700
+        - asset: assets/fonts/Poppins-SemiBold.ttf
+          weight: 600
+4. THEME CONFIGURATION (lib/config/theme.dart)
+import 'package:flutter/material.dart';
+
+class AppTheme {
+  static const Color primary   = Color(0xFF1F4E79);
+  static const Color secondary = Color(0xFF2E75B6);
+  static const Color accent    = Color(0xFF5BA3D9);
+  static const Color background = Color(0xFFF4F6FA);
+  static const Color surface   = Colors.white;
+  static const Color error     = Color(0xFFD32F2F);
+
+  static ThemeData get theme => ThemeData(
+    useMaterial3: true,
+    colorScheme: ColorScheme.fromSeed(
+      seedColor: primary,
+      primary: primary,
+      secondary: secondary,
+      background: background,
+    ),
+    fontFamily: 'Poppins',
+    appBarTheme: const AppBarTheme(
+      backgroundColor: primary,
+      foregroundColor: Colors.white,
+      elevation: 0,
+      centerTitle: false,
+    ),
+    elevatedButtonTheme: ElevatedButtonThemeData(
+      style: ElevatedButton.styleFrom(
+        backgroundColor: primary,
+        foregroundColor: Colors.white,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+        ),
+        minimumSize: const Size(double.infinity, 52),
+      ),
+    ),
+    inputDecorationTheme: InputDecorationTheme(
+      filled: true,
+      fillColor: Colors.white,
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: BorderSide.none,
+      ),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: const BorderSide(color: Color(0xFFDDE3F0)),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: const BorderSide(color: primary, width: 2),
+      ),
+    ),
+    cardTheme: CardTheme(
+      elevation: 2,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(14),
+      ),
+    ),
+  );
+}
+5. ROUTES CONFIGURATION (lib/config/routes.dart)
+class AppRoutes {
+  static const String splash       = '/';
+  static const String login        = '/login';
+  static const String register     = '/register';
+  static const String home         = '/home';
+  static const String appointments = '/appointments';
+  static const String addAppt      = '/appointments/add';
+  static const String editAppt     = '/appointments/edit';
+  static const String profile      = '/profile';
+  static const String booking      = '/booking';
+  static const String confirm      = '/booking/confirm';
+  static const String apiPosts     = '/api-posts';
+  static const String analytics    = '/analytics';
+
+  static Map<String, WidgetBuilder> get routes => {
+    splash:       (_) => const SplashScreen(),
+    login:        (_) => const LoginScreen(),
+    register:     (_) => const RegisterScreen(),
+    home:         (_) => const HomeScreen(),
+    appointments: (_) => const AppointmentsListScreen(),
+    addAppt:      (_) => const AddAppointmentScreen(),
+    profile:      (_) => const ProfileScreen(),
+    booking:      (_) => const SlotBookingScreen(),
+    confirm:      (_) => const BookingConfirmScreen(),
+    apiPosts:     (_) => const ApiPostsScreen(),
+    analytics:    (_) => const AnalyticsDashboardScreen(),
+    // editAppt uses onGenerateRoute for data passing
+  };
+}
+6. MAIN.DART — APP ENTRY POINT
+import 'package:firebase_core/firebase_core.dart';
+import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'config/routes.dart';
+import 'config/theme.dart';
+import 'providers/auth_provider.dart';
+import 'providers/appointment_provider.dart';
+import 'services/notification_service.dart';
+import 'services/fcm_service.dart';
+
+// Global navigator key — required for notification tap navigation
+final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
+
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp();
+  await NotificationService.init();
+  await FcmService.init();
+  runApp(const AppointmentApp());
+}
+
+class AppointmentApp extends StatelessWidget {
+  const AppointmentApp({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => AuthProvider()..checkSession()),
+        ChangeNotifierProvider(create: (_) => AppointmentProvider()),
+      ],
+      child: MaterialApp(
+        title: 'Appointment App',
+        navigatorKey: navigatorKey,
+        theme: AppTheme.theme,
+        routes: AppRoutes.routes,
+        initialRoute: AppRoutes.splash,
+        debugShowCheckedModeBanner: false,
+      ),
+    );
+  }
+}
+7. DATA MODEL — APPOINTMENT (lib/models/appointment_model.dart)
+class AppointmentModel {
+  final String appointmentId;
+  final String userId;
+  final String serviceName;
+  final String providerName;
+  final String date;         // Format: yyyy-MM-dd
+  final String timeSlot;     // Format: 10:00 AM
+  final String status;       // pending | confirmed | cancelled
+  final String notes;
+  final String createdAt;    // ISO 8601
+
+  AppointmentModel({
+    required this.appointmentId,
+    required this.userId,
+    required this.serviceName,
+    required this.providerName,
+    required this.date,
+    required this.timeSlot,
+    this.status = 'pending',
+    this.notes = '',
+    required this.createdAt,
+  });
+
+  factory AppointmentModel.fromMap(Map<String, dynamic> map, String id) {
+    return AppointmentModel(
+      appointmentId: id,
+      userId:       map['userId']       ?? '',
+      serviceName:  map['serviceName']  ?? '',
+      providerName: map['providerName'] ?? '',
+      date:         map['date']         ?? '',
+      timeSlot:     map['timeSlot']     ?? '',
+      status:       map['status']       ?? 'pending',
+      notes:        map['notes']        ?? '',
+      createdAt:    map['createdAt']    ?? '',
+    );
+  }
+
+  Map<String, dynamic> toMap() => {
+    'userId':       userId,
+    'serviceName':  serviceName,
+    'providerName': providerName,
+    'date':         date,
+    'timeSlot':     timeSlot,
+    'status':       status,
+    'notes':        notes,
+    'createdAt':    createdAt,
+  };
+}
+Firestore Collection: appointments/{appointmentId}
+
+Field	Type	Validation	Default
+appointmentId	String	Auto (Firestore)	—
+userId	String	Required, non-empty	—
+serviceName	String	Required	—
+providerName	String	Required	—
+date	String	Required, future date	—
+timeSlot	String	Required	—
+status	String	pending/confirmed/cancelled	pending
+notes	String	Optional	''
+createdAt	String	Auto ISO 8601	—
+8. DATA MODEL — POST (lib/models/post_model.dart)
+class Post {
+  final int id;
+  final int userId;
+  final String title;
+  final String body;
+
+  Post({ required this.id, required this.userId,
+         required this.title, required this.body });
+
+  factory Post.fromJson(Map<String, dynamic> json) {
+    return Post(
+      id:     json['id']     as int,
+      userId: json['userId'] as int,
+      title:  json['title']  as String,
+      body:   json['body']   as String,
+    );
+  }
+}
+9. PROVIDERS
+AuthProvider (lib/providers/auth_provider.dart)
+Manages global login/logout state across the whole app.
+
+State:
+
+bool _isLoggedIn
+String _userName
+String _userEmail
+Methods:
+
+checkSession() — Called on app launch. Checks SharedPreferences + Firebase current user. Calls notifyListeners().
+login(email, password) — Calls Firebase signInWithEmailAndPassword, saves isLoggedIn: true in SharedPreferences, stores user details, notifyListeners().
+logout() — Calls Firebase signOut(), removes key from SharedPreferences, clears state, notifyListeners().
+AppointmentProvider (lib/providers/appointment_provider.dart)
+Manages the full CRUD lifecycle of appointments with real-time Firestore updates.
+
+State:
+
+List<AppointmentModel> _appointments
+bool _isLoading
+Methods:
+
+listenToAppointments(userId) — Subscribes to Firestore stream, updates _appointments on change, calls notifyListeners().
+addAppointment(AppointmentModel) — Sets loading true, calls service, sets loading false, notifyListeners().
+updateAppointment(id, data) — Calls service update, notifyListeners().
+deleteAppointment(id, notifId) — Calls service delete + cancels scheduled notification, notifyListeners().
+10. SERVICES
+AppointmentService (lib/services/appointment_service.dart)
+All Firestore operations — separated from UI.
+
+class AppointmentService {
+  final _col = FirebaseFirestore.instance.collection('appointments');
+
+  Future<void> createAppointment(AppointmentModel appt) async =>
+      await _col.add(appt.toMap());
+
+  Stream<List<AppointmentModel>> getAppointments(String userId) =>
+      _col.where('userId', isEqualTo: userId)
+          .orderBy('createdAt', descending: true)
+          .snapshots()
+          .map((snap) => snap.docs
+              .map((d) => AppointmentModel.fromMap(d.data(), d.id))
+              .toList());
+
+  Future<void> updateAppointment(String id, Map<String, dynamic> data) async =>
+      await _col.doc(id).update(data);
+
+  Future<void> deleteAppointment(String id) async =>
+      await _col.doc(id).delete();
+}
+ApiService (lib/services/api_service.dart)
+Fetches data from JSONPlaceholder REST API.
+
+Endpoint: https://jsonplaceholder.typicode.com/posts
+Method: GET
+Timeout: 10 seconds
+Error handling: TimeoutException, SocketException, HTTP status codes
+NotificationService (lib/services/notification_service.dart)
+Handles all local and scheduled notifications.
+
+Channel ID: appointment_channel
+Channel Name: Appointment Alerts
+Plugin: FlutterLocalNotificationsPlugin
+init() — Initializes timezone data + plugin, creates Android notification channel
+showBookingConfirmation(serviceName, date, timeSlot) — Instant notification after booking
+scheduleAppointmentReminder(id, serviceName, appointmentDateTime) — zonedSchedule 1 hour before appointment
+showFromRemoteMessage(RemoteMessage) — Displays FCM push as local notification
+cancelNotification(id) — Cancels specific scheduled notification
+cancelAll() — Cancels all pending notifications
+Tap handler: Navigates to AppRoutes.appointments via global navigatorKey
+FcmService (lib/services/fcm_service.dart)
+Configures Firebase Cloud Messaging.
+
+Requests push permissions (iOS + Android 13+)
+Gets and logs FCM device token for server-side targeting
+Listens to FirebaseMessaging.onMessage (foreground) — displays as local notification
+Listens to FirebaseMessaging.onMessageOpenedApp (background tap) — navigates to appointments
+Registers top-level _backgroundMessageHandler for terminated state
+ChartService (lib/services/chart_service.dart)
+Aggregates Firestore data for chart rendering.
+
+getAppointmentsByDay() — Returns Map<int, int> (weekday 0=Mon to 6=Sun → count)
+getAppointmentsByStatus() — Returns Map<String, int> (confirmed/pending/cancelled → count)
+11. SCREENS
+SplashScreen
+Checks session via AuthProvider.checkSession()
+Routes to HomeScreen if session active, LoginScreen if not
+LoginScreen (lib/screens/auth/login_screen.dart)
+UI Elements:
+
+App logo (calendar icon inside rounded container, color: #1F4E79)
+App name + tagline text
+CustomTextField for email (keyboard: emailAddress)
+CustomTextField for password (with visibility toggle suffix icon)
+Forgot Password? TextButton (right-aligned)
+CustomButton for Login
+OutlinedButton.icon for Login with OTP
+"Don't have an account? Create Account" row at bottom
+Logic:
+
+Validates non-empty email and password
+Calls AuthProvider.login(email, password)
+On success: Navigator.pushReplacementNamed(context, AppRoutes.home)
+On FirebaseAuthException: displays mapped error message
+Error codes handled: user-not-found, wrong-password, invalid-email, network-request-failed
+RegisterScreen (lib/screens/auth/register_screen.dart)
+UI Elements:
+
+Full Name, Email, Password, Confirm Password fields
+Register button with loading state
+Logic:
+
+Validates: all fields non-empty, passwords match, password >= 6 characters
+Calls FirebaseAuth.instance.createUserWithEmailAndPassword()
+Saves user doc to Firestore users/{uid}: { name, email, createdAt }
+On success: Navigator.pushReplacementNamed(context, AppRoutes.login)
+Error codes handled: email-already-in-use, invalid-email, weak-password
+HomeScreen (lib/screens/home/home_screen.dart)
+UI Elements:
+
+AppBar with title + profile IconButton
+NavigationDrawer (UserAccountsDrawerHeader + ListTiles for Home, My Appointments, Profile, Logout)
+BottomNavigationBar (3 tabs: Dashboard, Appointments, Profile)
+Greeting text using AuthProvider.userName
+Search bar (TextField with search prefix icon)
+Horizontal ListView of category chips (Clinic, Salon, Tutor, Repair)
+Vertical list of service Card + ListTile widgets (Dr. Anita Shah, Style Studio, Rahul Sir Tuition)
+WillPopScope with double-back-press exit toast
+Service Categories:
+
+Label	Icon
+Clinic	Icons.local_hospital
+Salon	Icons.content_cut
+Tutor	Icons.school
+Repair	Icons.build
+Service Cards (sample data):
+
+Name	Type	Slots	Rating
+Dr. Anita Shah	Clinic	5 slots left	4.8
+Style Studio	Salon	3 slots left	4.6
+Rahul Sir Tuition	Tutor	8 slots left	4.9
+SlotBookingScreen (lib/screens/booking/slot_booking_screen.dart)
+UI Elements:
+
+TableCalendar (range: today to today+60 days)
+Color legend row (Available, Booked, Selected)
+Wrap of slot chip containers (tappable when available, greyed when booked)
+CustomButton "Confirm Slot – {time}" (visible only when slot selected)
+Slot Data (sample):
+
+09:00 AM (available), 09:30 AM (booked), 10:00 AM (available),
+10:30 AM (available), 11:00 AM (booked), 11:30 AM (available),
+02:00 PM (available), 02:30 PM (available)
+State: _selectedDay, _focusedDay, _selectedSlot
+
+AddAppointmentScreen (lib/screens/booking/add_appointment_screen.dart)
+UI Elements:
+
+DropdownButtonFormField for service type (Clinic, Salon, Tutor, Repair)
+CustomTextField for provider name
+Date picker field (triggers showDatePicker with app theme color)
+Time slot Wrap chips (same logic as SlotBookingScreen)
+Notes text field (optional)
+CustomButton to submit
+Validation:
+
+Service type, provider name, date, and time slot: all required
+Inline error messages shown below each invalid field
+On Success:
+
+Creates AppointmentModel and calls AppointmentProvider.addAppointment()
+Calls NotificationService.showBookingConfirmation()
+Calls NotificationService.scheduleAppointmentReminder() (1 hour before)
+Shows SnackBar: "✅ Appointment booked successfully!"
+Navigator.pop(context)
+AppointmentsListScreen (lib/screens/home/appointments_list_screen.dart)
+UI Elements:
+
+StreamBuilder / AppointmentProvider consumer showing list
+ListView.builder of AppointmentCard widgets
+FloatingActionButton.extended ("+ New Booking") → navigates to addAppt
+Loading: CircularProgressIndicator
+Empty: centered "No appointments yet." text
+Each card has edit and delete IconButtons
+Delete flow:
+
+showDialog with AlertDialog (warning icon + "Delete Appointment" title)
+Cancel / Delete (red) buttons
+On confirm: AppointmentProvider.deleteAppointment() + SnackBar "Appointment removed."
+EditAppointmentScreen (lib/screens/booking/edit_appointment_screen.dart)
+Data Passed: AppointmentModel appointment (via constructor)
+
+UI Elements:
+
+Pre-filled status DropdownButtonFormField (pending / confirmed / cancelled)
+Pre-filled notes TextField
+CustomButton "Update Appointment"
+On Success:
+
+Calls AppointmentProvider.updateAppointment(id, { status, notes })
+Shows SnackBar: "✅ Appointment updated successfully!"
+Navigator.pop(context)
+ProfileScreen (lib/screens/profile/profile_screen.dart)
+UI Elements:
+
+CircleAvatar (radius 44, icon: Icons.person)
+User name and email (loaded from Firestore users/{uid})
+SwitchListTile — Push Notifications toggle
+SwitchListTile — Email Reminders toggle
+Logout ElevatedButton.icon (red background)
+Logout logic:
+
+FirebaseAuth.instance.signOut()
+SharedPreferences.remove('isLoggedIn')
+Navigator.pushNamedAndRemoveUntil(context, AppRoutes.login, (route) => false)
+ApiPostsScreen (lib/screens/api/api_posts_screen.dart)
+Three UI states:
+
+Loading: CircularProgressIndicator + "Fetching posts..." text
+Error: Icons.wifi_off + error message + Retry ElevatedButton
+Success: RefreshIndicator wrapping ListView.builder of post Cards
+Post Card layout:
+
+CircleAvatar with post ID number
+Bold post title
+Grey post body text
+Blue "User ID: X" label
+Features:
+
+Pull-to-refresh via RefreshIndicator
+Retry button on error
+Auto-fetches on screen init
+AnalyticsDashboardScreen (lib/screens/analytics/analytics_dashboard_screen.dart)
+Structure:
+
+AppBar with TabBar (3 tabs: Bar, Line, Pie)
+FutureBuilder wrapping TabBarView
+Data fetched once from ChartService
+Bar Chart Tab (_BarChartTab):
+
+X-axis: days of week (Mon–Sun)
+Y-axis: appointment count
+Bar color: #1F4E79, width: 18, rounded corners
+Animation: 600ms ease-in-out
+Line Chart Tab (_LineChartTab):
+
+Same day-of-week data as smooth curve
+Color: #2E75B6, bar width: 3
+Curved line with dot data and filled area below (10% opacity)
+Pie Chart Tab (_PieChartTab):
+
+Sections: Confirmed (green #28A745), Pending (amber #FFC107), Cancelled (red #DC3545)
+Section radius: 90, center space radius: 40
+Labels show status name + count
+Empty guard: shows "No appointments yet." when all values are 0
+12. REUSABLE WIDGETS
+CustomTextField (lib/widgets/custom_text_field.dart)
+CustomTextField({
+  required TextEditingController controller,
+  required String label,
+  required String hint,
+  required IconData prefixIcon,
+  bool obscureText = false,
+  Widget? suffixIcon,
+  TextInputType keyboardType = TextInputType.text,
+})
+White fill, #DDE3F0 enabled border, #1F4E79 focused border (2px width)
+Border radius: 12px on all states
+CustomButton (lib/widgets/custom_button.dart)
+CustomButton({
+  required String label,
+  required VoidCallback onPressed,
+  bool isLoading = false,
+})
+Width: double.infinity, height: 52px
+Background: #1F4E79, text: white, font size: 16, bold
+When isLoading = true: shows white CircularProgressIndicator, disables tap
+AppointmentCard (lib/widgets/appointment_card.dart)
+Card (elevation: 3, border radius: 14)
+ListTile with CircleAvatar leading, service name title, provider + date + time subtitle
+Color-coded status badge:
+pending → orange (with 15% opacity background + border)
+confirmed → green
+cancelled → red
+Trailing: edit IconButton (secondary color) + delete IconButton (red)
+SlotCard (lib/widgets/slot_card.dart)
+Displays time slot with available/booked state styling
+13. NAVIGATION ARCHITECTURE
+Navigation Methods Used
+Method	Use Case	Back Behavior
+Navigator.pushNamed()	Add/Edit appointment	Back returns to previous screen
+Navigator.pushReplacementNamed()	Login → Home	Cannot go back to Login
+Navigator.pushNamedAndRemoveUntil()	Logout → Login	Stack fully cleared
+Navigator.pop()	Return from Edit/Add	Returns with optional data
+MaterialPageRoute	Edit screen (data passing)	Standard back
+Data Passing Between Screens
+The AppointmentModel object is passed directly via constructor to EditAppointmentScreen:
+
+Navigator.push(context, MaterialPageRoute(
+  builder: (_) => EditAppointmentScreen(appointment: appt),
+));
+WillPopScope (Home Screen)
+Double-back press within 2 seconds exits the app
+First press: SnackBar "Press back again to exit"
+Second press within window: SystemNavigator.pop()
+14. STATE MANAGEMENT (PROVIDER PATTERN)
+MultiProvider Registration
+Both providers registered at app root in main.dart using MultiProvider.
+
+Consuming State in Screens
+// Rebuild on change (e.g., Home Screen showing user name)
+final auth = context.watch<AuthProvider>();
+Text('Welcome, ${auth.userName}!');
+
+// One-time action, no rebuild needed (e.g., submitting appointment)
+await context.read<AppointmentProvider>().addAppointment(appt);
+
+// Listen on init (Appointments List)
+context.read<AppointmentProvider>().listenToAppointments(userId);
+State Flow
+AppointmentProvider.listenToAppointments(userId) sets up Firestore real-time stream
+On any change in Firestore: notifyListeners() triggers UI rebuild
+Screens watching AppointmentProvider re-render automatically
+All CRUD operations go through AppointmentProvider → AppointmentService → Firestore
+15. AUTHENTICATION FLOW
+App Launch
+    │
+    ▼
+SplashScreen
+    │── session active (SharedPrefs + Firebase user) ──▶ HomeScreen
+    │── no session ──────────────────────────────────▶ LoginScreen
+                                │
+               ┌────────────────┼────────────────┐
+               ▼                ▼                ▼
+         Valid Login        Invalid Login    Register Link
+               │                │                │
+               ▼                ▼                ▼
+          HomeScreen      Error SnackBar    RegisterScreen
+                                                  │
+                                          Success/Redirect
+                                                  │
+                                                  ▼
+                                             LoginScreen
+Session Management
+On login: SharedPreferences.setBool('isLoggedIn', true)
+On app launch: checks BOTH SharedPreferences AND FirebaseAuth.instance.currentUser
+Both must be true to skip login
+On logout: clears both Firebase session and SharedPreferences
+Firebase Error Mapping
+Firebase Code	User-Friendly Message
+user-not-found	No account found for this email.
+wrong-password	Incorrect password.
+invalid-email	Enter a valid email address.
+network-request-failed	Check your internet connection.
+email-already-in-use	Email is already registered.
+weak-password	Password is too weak.
+16. FIRESTORE DATABASE DESIGN
+Collections
+users/{uid}
+
+{
+  "name": "Maitrey Thakar",
+  "email": "maitrey@example.com",
+  "createdAt": "2025-04-01T10:00:00Z"
+}
+appointments/{appointmentId}
+
+{
+  "userId": "firebase_uid",
+  "serviceName": "Clinic",
+  "providerName": "Dr. Anita Shah",
+  "date": "2025-05-15",
+  "timeSlot": "10:00 AM",
+  "status": "pending",
+  "notes": "Annual checkup",
+  "createdAt": "2025-04-01T10:00:00.000Z"
+}
+Firestore Security Rules (recommended)
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /users/{userId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+    match /appointments/{appointmentId} {
+      allow read, write: if request.auth != null
+        && request.auth.uid == resource.data.userId;
+      allow create: if request.auth != null
+        && request.resource.data.userId == request.auth.uid;
+    }
+  }
+}
+17. REST API INTEGRATION
+API: JSONPlaceholder (https://jsonplaceholder.typicode.com/posts)
+Method: HTTP GET
+Response: JSON array of 100 post objects
+Fields used: id (int), userId (int), title (String), body (String)
+Timeout: 10 seconds
+Error handling: Timeout, SocketException (no internet), non-200 status codes
+18. NOTIFICATION SYSTEM
+Android Permissions (AndroidManifest.xml)
+<uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
+<uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
+<uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM"/>
+iOS Permissions (Info.plist)
+<key>UIBackgroundModes</key>
+<array>
+  <string>fetch</string>
+  <string>remote-notification</string>
+</array>
+Notification Types
+Type	Trigger	Content	Behavior
+Instant local	Appointment created	"Appointment Confirmed ✔" + service + date + time	Tap → Appointments list
+Scheduled local	1 hour before appointment	"Upcoming Appointment Reminder" + service name	Tap → Appointments list
+FCM foreground	Server push (app open)	Notification title + body	Local notification overlay
+FCM background	Server push (app in BG)	System tray notification	Tap → app navigates
+FCM terminated	Server push (app closed)	System tray notification	Cold start → navigates
+Notification Channel (Android 8+)
+Channel ID: appointment_channel
+Channel Name: Appointment Alerts
+Importance: Importance.high
+19. ANALYTICS DASHBOARD
+Data Aggregation Logic
+By day: Groups all user appointments by DateTime.weekday (Mon=1→0-indexed, Sun=7→6)
+By status: Counts documents where status == 'confirmed', 'pending', or 'cancelled'
+Queries are scoped to where('userId', isEqualTo: uid) — user-specific only
+Chart Configuration Summary
+Chart	Library widget	Data source	Animation
+Bar Chart	BarChart	getAppointmentsByDay()	600ms ease-in-out
+Line Chart	LineChart	getAppointmentsByDay()	Default flutter animation
+Pie Chart	PieChart	getAppointmentsByStatus()	Default flutter animation
+20. RELEASE BUILD CONFIGURATION
+Android Signing
+keytool -genkey -v \
+  -keystore ~/appointment_release.jks \
+  -keyalg RSA -keysize 2048 -validity 10000 \
+  -alias appointment_key
+android/key.properties (NOT in Git):
+
+storePassword=<password>
+keyPassword=<password>
+keyAlias=appointment_key
+storeFile=/path/to/appointment_release.jks
+Build Commands
+# Generate app icon
+dart run flutter_launcher_icons
+
+# Generate splash screen
+dart run flutter_native_splash:create
+
+# Build signed APK (universal)
+flutter build apk --release
+
+# Build split APKs (smaller files)
+flutter build apk --release --split-per-abi
+
+# Build AAB for Google Play
+flutter build appbundle --release
+
+# Build IPA for iOS
+flutter build ipa --release
+
+# Install on device via ADB
+adb install build/app/outputs/flutter-apk/app-release.apk
+Build Output Sizes
+Artefact	Output Path	Size
+APK (universal)	build/app/outputs/flutter-apk/app-release.apk	~22 MB
+APK (arm64-v8a)	build/app/outputs/flutter-apk/app-arm64-v8a-release.apk	~11 MB
+AAB	build/app/outputs/bundle/release/app-release.aab	~18 MB
+21. TESTING & QA SUMMARY
+Test Cases (10 total — all passed)
+TC ID	Scenario	Expected	Status
+TC01	Login with valid credentials	Navigate to Home	Pass
+TC02	Login with wrong password	Error SnackBar	Pass
+TC03	New user registration	Account created, redirect to Login	Pass
+TC04	Add new appointment	Appears in list	Pass
+TC05	Edit appointment	Updated data in list	Pass
+TC06	Delete appointment	Removed from list	Pass
+TC07	API data fetch	ListView shows 100 posts	Pass
+TC08	Analytics Bar Chart	Chart renders with day labels	Pass
+TC09	Analytics Pie Chart	Sections by status with counts	Pass
+TC10	Push notification on booking	Notification in tray	Pass
+Bugs Found and Fixed (6 total — all resolved)
+Bug ID	Description	Severity	Fix
+BUG01	App crash on logout with no active session	High	Null check on currentUser before signOut()
+BUG02	Bar chart overflows on small screens (<360dp)	Medium	Wrap BarChart in Expanded + FittedBox
+BUG03	Appointment list not refreshing after edit	Medium	Replace setState() with StreamBuilder
+BUG04	Push notification not triggered for cancelled status	Low	Fix status-conditional in FCM trigger logic
+BUG05	Pie chart shows blank when zero appointments exist	Medium	Add empty data guard widget
+BUG06	Login button unresponsive with empty email	High	Add GlobalKey<FormState> form validation
+Debugging Tools Used
+Flutter Debug Console (print() statements + try/catch)
+Flutter DevTools Widget Inspector (layout issues)
+Android Logcat (notification, FCM logs)
+Breakpoints (call stack tracing in VS Code / Android Studio)
+22. ANDROID PERMISSIONS REFERENCE
+<!-- Required for all network calls (Firebase, API, FCM) -->
+<uses-permission android:name="android.permission.INTERNET"/>
+<uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
+
+<!-- Notifications (Android 13+) -->
+<uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
+<uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
+
+<!-- Exact alarms for scheduled notifications -->
+<uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM"/>
+23. UI STYLING REFERENCE
+Element	Value
+Primary Color	#1F4E79
+Secondary Color	#2E75B6
+Background Color	#F4F6FA
+Card Elevation	2–3dp
+TextField Border Radius	12px
+Card Border Radius	14px
+Status Badge Border Radius	20px
+SnackBar Border Radius	10px
+Button Height	52px
+Button Width	double.infinity
+Horizontal Padding	20–28px
+Vertical Padding	16–40px
+Card Content Padding	14px
+Status: pending	Orange
+Status: confirmed	Green #28A745
+Status: cancelled	Red #DC3545
+Font (headings)	Poppins
+Font (body)	System default
+24. SNACKBAR FEEDBACK REFERENCE
+Event	Message	Color
+Appointment created	✅ Appointment booked successfully!	Green #2E7D32
+Appointment updated	✅ Appointment updated successfully!	Green #2E7D32
+Appointment deleted	Appointment removed.	Green
+Operation failed	❌ Failed. Please try again.	Red #C62828
+Exit warning	Press back again to exit	Default

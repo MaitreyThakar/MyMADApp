@@ -8,7 +8,7 @@ plugins {
 }
 
 android {
-    namespace = "com.d24it166.appointmentapp"
+    namespace = "com.d24it166.appointment_app"
     compileSdk = 36
     ndkVersion = flutter.ndkVersion
 
@@ -23,7 +23,7 @@ android {
     }
 
     defaultConfig {
-        applicationId = "com.d24it166.appointmentapp"
+        applicationId = "com.d24it166.appointment_app"
         minSdk = flutter.minSdkVersion
         targetSdk = 36
         versionCode = 1

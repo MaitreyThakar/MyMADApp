@@ -2,6 +2,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
+import '../../providers/slots_provider.dart';
 import '../../config/theme.dart';
 import '../../config/constants.dart';
 import '../../models/appointment_model.dart';
@@ -23,10 +24,12 @@ class _AddAppointmentScreenState extends State<AddAppointmentScreen> {
   final _providerCtrl = TextEditingController();
   final _notesCtrl = TextEditingController();
   final _dateCtrl = TextEditingController();
+  bool _providerLocked = false;
 
   String? _selectedService;
   String? _selectedSlot;
   DateTime? _selectedDate;
+  String? _selectedSlotId;
 
   @override
   void initState() {
@@ -37,11 +40,20 @@ class _AddAppointmentScreenState extends State<AddAppointmentScreen> {
       if (args is Map) {
         final date = args['date'] as String?;
         final slot = args['timeSlot'] as String?;
+        final slotId = args['slotId'] as String?;
+        final providerName = args['providerName'] as String?;
         if (date != null) {
           _dateCtrl.text = date;
           _selectedDate = DateTime.parse(date);
         }
         if (slot != null) setState(() => _selectedSlot = slot);
+        if (slotId != null) setState(() => _selectedSlotId = slotId);
+        if (providerName != null && providerName.trim().isNotEmpty) {
+          setState(() {
+            _providerCtrl.text = providerName;
+            _providerLocked = true;
+          });
+        }
       }
     });
   }
@@ -105,6 +117,7 @@ class _AddAppointmentScreenState extends State<AddAppointmentScreen> {
       providerName: _providerCtrl.text.trim(),
       date: _dateCtrl.text.trim(),
       timeSlot: _selectedSlot!,
+      slotId: _selectedSlotId,
       notes: _notesCtrl.text.trim(),
       createdAt: DateTime.now().toIso8601String(),
     );
@@ -207,6 +220,7 @@ class _AddAppointmentScreenState extends State<AddAppointmentScreen> {
                 label: 'Provider Name',
                 hint: 'Dr. Anita Shah',
                 prefixIcon: Icons.person_outline,
+                readOnly: _providerLocked,
                 validator: (v) {
                   if (v == null || v.trim().isEmpty) {
                     return 'Provider name is required';
@@ -234,19 +248,50 @@ class _AddAppointmentScreenState extends State<AddAppointmentScreen> {
               const SizedBox(height: 16),
               const _SectionLabel('Time Slot'),
               const SizedBox(height: 8),
-              Wrap(
-                children: AppConstants.sampleSlots.map((slot) {
-                  final isBooked = slot['status'] == 'booked';
-                  final isSelected = _selectedSlot == slot['time'];
-                  return SlotCard(
-                    time: slot['time']!,
-                    isBooked: isBooked,
-                    isSelected: isSelected,
-                    onTap: () =>
-                        setState(() => _selectedSlot = slot['time']),
+              Consumer<SlotsProvider>(builder: (context, prov, _) {
+                if (_selectedDate == null) {
+                  return const Padding(
+                    padding: EdgeInsets.symmetric(vertical: 8),
+                    child: Text(
+                      'Select a date to view available time slots.',
+                      style: TextStyle(color: Color(0xFF6B7280)),
+                    ),
                   );
-                }).toList(),
-              ),
+                }
+
+                if (prov.isLoading) {
+                  return const Padding(
+                    padding: EdgeInsets.symmetric(vertical: 8),
+                    child: Center(child: CircularProgressIndicator()),
+                  );
+                }
+
+                if (prov.slots.isEmpty) {
+                  return const Padding(
+                    padding: EdgeInsets.symmetric(vertical: 8),
+                    child: Text(
+                      'No available slots for selected date.',
+                      style: TextStyle(color: Color(0xFF6B7280)),
+                    ),
+                  );
+                }
+
+                return Wrap(
+                  children: prov.slots.map((s) {
+                      final isBooked = s.status == 'booked';
+                      final isSelected = _selectedSlot == s.time;
+                      return SlotCard(
+                        time: s.time,
+                        isBooked: isBooked,
+                        isSelected: isSelected,
+                        onTap: () => setState(() {
+                          _selectedSlot = s.time;
+                          _selectedSlotId = s.slotId;
+                        }),
+                      );
+                    }).toList(),
+                );
+              }),
               const SizedBox(height: 16),
               const _SectionLabel('Notes (Optional)'),
               const SizedBox(height: 8),
